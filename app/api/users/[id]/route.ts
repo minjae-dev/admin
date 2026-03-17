@@ -1,13 +1,13 @@
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const body = (await request.json()) as { status?: string };
 
-    if (body.status !== 'approved') {
-      return NextResponse.json({ message: 'status는 approved만 허용됩니다.' }, { status: 400 });
+    if (body.status !== 'approved' && body.status !== 'pending') {
+      return NextResponse.json({ message: 'status는 approved 또는 pending만 허용됩니다.' }, { status: 400 });
     }
 
     const updated = await prisma.user.update({
