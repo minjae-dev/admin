@@ -43,6 +43,9 @@ export default function AdminDashboard() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [toastMessage, setToastMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | UserStatus>('all');
+  const [visibilityFilter, setVisibilityFilter] = useState<'all' | ProfileVisibility>('all');
 
   const fetchUsers = async () => {
     try {
@@ -123,6 +126,17 @@ export default function AdminDashboard() {
     }
   };
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredUsers = users.filter((user) => {
+    const matchesQuery =
+      normalizedQuery.length === 0 ||
+      user.name.toLowerCase().includes(normalizedQuery) ||
+      user.email.toLowerCase().includes(normalizedQuery);
+    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+    const matchesVisibility = visibilityFilter === 'all' || user.profileVisibility === visibilityFilter;
+    return matchesQuery && matchesStatus && matchesVisibility;
+  });
+
   return (
     <div className="mt-4 overflow-x-auto">
       {toastMessage ? (
@@ -136,72 +150,133 @@ export default function AdminDashboard() {
       {loading ? (
         <div className="rounded-md border border-gray-200 bg-gray-50 p-6 text-center text-gray-600">회원 목록 불러오는 중...</div>
       ) : (
-        <table className="w-full border border-gray-300 text-left text-sm text-gray-800">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="border border-gray-300 px-4 py-3 font-semibold">이름</th>
-              <th className="border border-gray-300 px-4 py-3 font-semibold">이메일</th>
-              <th className="border border-gray-300 px-4 py-3 font-semibold">상태</th>
-              <th className="border border-gray-300 px-4 py-3 font-semibold">프로필 공개 범위</th>
-              <th className="border border-gray-300 px-4 py-3 font-semibold">관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="bg-white">
-                <td className="border border-gray-300 px-4 py-3">{user.name}</td>
-                <td className="border border-gray-300 px-4 py-3">{user.email}</td>
-                <td className="border border-gray-300 px-4 py-3">
-                  <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                      user.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'
-                    }`}
-                  >
-                    {user.status}
-                  </span>
-                </td>
-                <td className="border border-gray-300 px-4 py-3">
-                  <div className="flex flex-col gap-1">
-                    <select
-                      value={user.profileVisibility}
-                      onChange={(event) => updateProfileVisibility(user.id, event.target.value as ProfileVisibility)}
-                      disabled={processingId === user.id}
-                      className="rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-800 disabled:cursor-not-allowed disabled:bg-gray-100"
-                    >
-                      {profileVisibilityOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-gray-500">{profileVisibilityOptions.find((option) => option.value === user.profileVisibility)?.description}</p>
-                  </div>
-                </td>
-                <td className="border border-gray-300 px-4 py-3">
-                  {user.status === 'pending' ? (
-                    <button
-                      type="button"
-                      onClick={() => updateUserStatus(user.id, 'approved')}
-                      disabled={processingId === user.id}
-                      className="rounded-md bg-blue-600 px-3 py-1.5 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
-                    >
-                      {processingId === user.id ? '처리 중...' : '승인'}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => updateUserStatus(user.id, 'pending')}
-                      disabled={processingId === user.id}
-                      className="rounded-md bg-gray-600 px-3 py-1.5 text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-                    >
-                      {processingId === user.id ? '처리 중...' : '취소'}
-                    </button>
-                  )}
-                </td>
+        <>
+          <div className="mb-4 rounded-md border border-gray-200 bg-white p-3">
+            <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto]">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="이름 또는 이메일로 검색"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring"
+              />
+
+              <select
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value as 'all' | UserStatus)}
+                className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800"
+              >
+                <option value="all">전체 상태</option>
+                <option value="pending">pending</option>
+                <option value="approved">approved</option>
+              </select>
+
+              <select
+                value={visibilityFilter}
+                onChange={(event) => setVisibilityFilter(event.target.value as 'all' | ProfileVisibility)}
+                className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800"
+              >
+                <option value="all">전체 공개 범위</option>
+                {profileVisibilityOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setStatusFilter('all');
+                  setVisibilityFilter('all');
+                }}
+                className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100"
+              >
+                초기화
+              </button>
+            </div>
+
+            <p className="mt-2 text-xs text-gray-600">
+              총 {users.length}명 중 {filteredUsers.length}명 표시
+            </p>
+          </div>
+
+          <table className="w-full border border-gray-300 text-left text-sm text-gray-800">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="border border-gray-300 px-4 py-3 font-semibold">이름</th>
+                <th className="border border-gray-300 px-4 py-3 font-semibold">이메일</th>
+                <th className="border border-gray-300 px-4 py-3 font-semibold">상태</th>
+                <th className="border border-gray-300 px-4 py-3 font-semibold">프로필 공개 범위</th>
+                <th className="border border-gray-300 px-4 py-3 font-semibold">관리</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredUsers.length === 0 ? (
+                <tr className="bg-white">
+                  <td colSpan={5} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                    검색/필터 조건에 맞는 회원이 없습니다.
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user) => (
+                  <tr key={user.id} className="bg-white">
+                    <td className="border border-gray-300 px-4 py-3">{user.name}</td>
+                    <td className="border border-gray-300 px-4 py-3">{user.email}</td>
+                    <td className="border border-gray-300 px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                          user.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'
+                        }`}
+                      >
+                        {user.status}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3">
+                      <div className="flex flex-col gap-1">
+                        <select
+                          value={user.profileVisibility}
+                          onChange={(event) => updateProfileVisibility(user.id, event.target.value as ProfileVisibility)}
+                          disabled={processingId === user.id}
+                          className="rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-800 disabled:cursor-not-allowed disabled:bg-gray-100"
+                        >
+                          {profileVisibilityOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500">{profileVisibilityOptions.find((option) => option.value === user.profileVisibility)?.description}</p>
+                      </div>
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3">
+                      {user.status === 'pending' ? (
+                        <button
+                          type="button"
+                          onClick={() => updateUserStatus(user.id, 'approved')}
+                          disabled={processingId === user.id}
+                          className="rounded-md bg-blue-600 px-3 py-1.5 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                        >
+                          {processingId === user.id ? '처리 중...' : '승인'}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => updateUserStatus(user.id, 'pending')}
+                          disabled={processingId === user.id}
+                          className="rounded-md bg-gray-600 px-3 py-1.5 text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                        >
+                          {processingId === user.id ? '처리 중...' : '취소'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </>
       )}
     </div>
   );
