@@ -18,7 +18,7 @@ export default async function Home() {
           <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
           <LogoutButton />
         </div>
-        <h2 className="mt-6 text-xl font-semibold text-gray-800">회원 승인 관리</h2>
+        <h2 className="mt-6 text-xl font-semibold text-gray-800">회원 승인 및 프로필 공개 범위 관리</h2>
         <AdminDashboard />
       </div>
     </main>
