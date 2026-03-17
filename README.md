@@ -7,6 +7,7 @@ Next.js App Router 기반의 실제 동작하는 관리자 시스템입니다.
 - NextAuth Credentials 로그인 (`admin@test.com` / `123456`)
 - `/` 관리자 페이지 보호 (미로그인 시 `/login` 리다이렉트)
 - Prisma + DB 기반 회원 조회/승인
+- 회원별 프로필 공개 범위 설정 (회원만/일부 비공개/관리자 승인 후 공개)
 - REST API
   - `GET /api/users`
   - `PATCH /api/users/[id]`

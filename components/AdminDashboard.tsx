@@ -1,13 +1,41 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
+type UserStatus = 'pending' | 'approved';
+type ProfileVisibility = 'members_only' | 'partial_private' | 'admin_approval';
+
 type User = {
   id: string;
   name: string;
   email: string;
-  status: 'pending' | 'approved';
+  status: UserStatus;
+  profileVisibility: ProfileVisibility;
 };
 
-import { useEffect, useState } from 'react';
+const profileVisibilityOptions: { value: ProfileVisibility; label: string; description: string }[] = [
+  {
+    value: 'members_only',
+    label: '회원만 열람 가능',
+    description: '로그인한 회원에게만 프로필을 공개합니다.',
+  },
+  {
+    value: 'partial_private',
+    label: '일부 정보 비공개',
+    description: '민감한 정보는 비공개 처리하고 기본 정보만 노출합니다.',
+  },
+  {
+    value: 'admin_approval',
+    label: '관리자 승인 후 공개',
+    description: '관리자 검토 및 승인 이후 프로필을 공개합니다.',
+  },
+];
+
+const profileVisibilityLabelMap: Record<ProfileVisibility, string> = {
+  members_only: '회원만 열람 가능',
+  partial_private: '일부 정보 비공개',
+  admin_approval: '관리자 승인 후 공개',
+};
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
@@ -39,7 +67,7 @@ export default function AdminDashboard() {
     fetchUsers();
   }, []);
 
-  const updateUserStatus = async (id: string, status: User['status']) => {
+  const updateUserStatus = async (id: string, status: UserStatus) => {
     try {
       setProcessingId(id);
       setError('');
@@ -57,6 +85,34 @@ export default function AdminDashboard() {
 
       setUsers((prev) => prev.map((user) => (user.id === id ? { ...user, status } : user)));
       setToastMessage(status === 'approved' ? '회원 승인 완료' : '회원 승인 취소 완료');
+      setTimeout(() => {
+        setToastMessage('');
+      }, 2000);
+    } catch (updateError) {
+      setError(updateError instanceof Error ? updateError.message : '알 수 없는 오류가 발생했습니다.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const updateProfileVisibility = async (id: string, profileVisibility: ProfileVisibility) => {
+    try {
+      setProcessingId(id);
+      setError('');
+      const response = await fetch(`/api/users/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ profileVisibility }),
+      });
+
+      if (!response.ok) {
+        throw new Error('프로필 공개 범위 변경 중 오류가 발생했습니다.');
+      }
+
+      setUsers((prev) => prev.map((user) => (user.id === id ? { ...user, profileVisibility } : user)));
+      setToastMessage(`프로필 공개 범위가 '${profileVisibilityLabelMap[profileVisibility]}'로 변경되었습니다.`);
       setTimeout(() => {
         setToastMessage('');
       }, 2000);
@@ -86,6 +142,7 @@ export default function AdminDashboard() {
               <th className="border border-gray-300 px-4 py-3 font-semibold">이름</th>
               <th className="border border-gray-300 px-4 py-3 font-semibold">이메일</th>
               <th className="border border-gray-300 px-4 py-3 font-semibold">상태</th>
+              <th className="border border-gray-300 px-4 py-3 font-semibold">프로필 공개 범위</th>
               <th className="border border-gray-300 px-4 py-3 font-semibold">관리</th>
             </tr>
           </thead>
@@ -102,6 +159,23 @@ export default function AdminDashboard() {
                   >
                     {user.status}
                   </span>
+                </td>
+                <td className="border border-gray-300 px-4 py-3">
+                  <div className="flex flex-col gap-1">
+                    <select
+                      value={user.profileVisibility}
+                      onChange={(event) => updateProfileVisibility(user.id, event.target.value as ProfileVisibility)}
+                      disabled={processingId === user.id}
+                      className="rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-800 disabled:cursor-not-allowed disabled:bg-gray-100"
+                    >
+                      {profileVisibilityOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500">{profileVisibilityOptions.find((option) => option.value === user.profileVisibility)?.description}</p>
+                  </div>
                 </td>
                 <td className="border border-gray-300 px-4 py-3">
                   {user.status === 'pending' ? (

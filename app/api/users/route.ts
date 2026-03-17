@@ -20,10 +20,20 @@ export async function POST(request: Request) {
       name?: string;
       email?: string;
       status?: string;
+      profileVisibility?: string;
     };
 
     if (!body.name || !body.email || !body.status) {
       return NextResponse.json({ message: 'name, email, status가 필요합니다.' }, { status: 400 });
+    }
+
+    const profileVisibility = body.profileVisibility ?? 'members_only';
+
+    if (!['members_only', 'partial_private', 'admin_approval'].includes(profileVisibility)) {
+      return NextResponse.json(
+        { message: 'profileVisibility는 members_only, partial_private, admin_approval만 허용됩니다.' },
+        { status: 400 },
+      );
     }
 
     const user = await prisma.user.create({
@@ -31,6 +41,7 @@ export async function POST(request: Request) {
         name: body.name,
         email: body.email,
         status: body.status,
+        profileVisibility,
       },
     });
 
