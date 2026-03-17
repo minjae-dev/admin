@@ -12,6 +12,7 @@ model User {
   name      String
   email     String   @unique
   status    String
-  profileVisibility String @default("members_only")
+  isPublic  Boolean  @default(false)
+  role      String   @default("member")
   createdAt DateTime @default(now())
 }

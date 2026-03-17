@@ -4,9 +4,9 @@ const prisma = new PrismaClient();
 
 async function main() {
   const users = [
-    { name: '김민수', email: 'user1@test.com', status: 'pending', profileVisibility: 'members_only' },
-    { name: '이영희', email: 'user2@test.com', status: 'approved', profileVisibility: 'partial_private' },
-    { name: '박지훈', email: 'user3@test.com', status: 'pending', profileVisibility: 'admin_approval' },
+    { name: '김민수', email: 'user1@test.com', status: 'pending', isPublic: false, role: 'member' },
+    { name: '이영희', email: 'user2@test.com', status: 'approved', isPublic: true, role: 'member' },
+    { name: '박지훈', email: 'user3@test.com', status: 'pending', isPublic: false, role: 'member' },
   ] as const;
 
   for (const user of users) {
@@ -15,13 +15,15 @@ async function main() {
       update: {
         name: user.name,
         status: user.status,
-        profileVisibility: user.profileVisibility,
+        isPublic: user.isPublic,
+        role: user.role,
       },
       create: {
         name: user.name,
         email: user.email,
         status: user.status,
-        profileVisibility: user.profileVisibility,
+        isPublic: user.isPublic,
+        role: user.role,
       },
     });
   }
