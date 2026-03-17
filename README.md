@@ -1,37 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Admin Dashboard
 
-## Getting Started
+Next.js App Router 기반의 실제 동작하는 관리자 시스템입니다.
 
-First, run the development server:
+## 주요 기능
+
+- NextAuth Credentials 로그인 (`admin@test.com` / `123456`)
+- `/` 관리자 페이지 보호 (미로그인 시 `/login` 리다이렉트)
+- Prisma + DB 기반 회원 조회/승인
+- REST API
+  - `GET /api/users`
+  - `PATCH /api/users/[id]`
+  - `POST /api/users` (옵션)
+- 회원 승인 시 토스트 메시지: `회원 승인 완료`
+- 로딩 상태 및 API 에러 처리
+
+## 기술 스택
+
+- Next.js (App Router)
+- Tailwind CSS
+- Prisma ORM
+- SQLite (로컬 기본)
+- NextAuth (Credentials Provider)
+
+> 운영 환경에서는 `prisma/schema.prisma`의 datasource를 PostgreSQL로 변경해 사용할 수 있습니다.
+
+## 실행 방법
 
 ```bash
+npm install
+npx prisma migrate dev
+npx prisma db seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 로그인 정보
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# admin
+- email: `admin@test.com`
+- password: `123456`
